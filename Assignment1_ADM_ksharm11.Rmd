@@ -1,0 +1,83 @@
+---
+title: "Assignment 1"
+author: "Kunal Sharma"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message =  FALSE)
+```
+## Importing Important Packages
+```{r}
+library(ISLR)
+library(dplyr)
+library(ggplot2)
+```
+
+Loading the Carseats dataset with only 3 variables.
+Filtering the data into two subsets based on the shelve location(GOOD or BAD).
+
+```{r}
+SafeBabies <- Carseats %>% select("Sales", "Price", "ShelveLoc")
+Good_shevles <- filter(SafeBabies, ShelveLoc == "Good")
+Bad_shevles <- filter(SafeBabies, ShelveLoc == "Bad")
+```
+
+#Building a Linear Regression model to predict the sales of the carseat for both good as well as bad shelve location individually.
+
+```{r}
+#Linear Model for GOOD Shelve location
+Lm_Good <- lm(Sales ~ Price, data = Good_shevles)
+summary(Lm_Good)
+```
+
+```{r}
+#Linear Model for BAD Shelve location
+Lm_Bad <- lm(Sales ~ Price, data = Bad_shevles)
+summary(Lm_Bad)
+```
+
+#Equation:
+Total Profit = Sales * (Selling Price - Production Cost)
+
+Futher simplication of equation we got the below formula,
+
+Optimal Selling Price = Predicted Sales based on Production Cost / (2 * Estimated Price Coefficient)
+
+Assuming the Production Cost of a CarSeat is $55.0, below is the predicted optimal Selling Price of the Carseat.
+
+## optimal cost for shelve location Good ##
+```{r}
+Productioncost<-55
+paste("The optimal price for a good shelf position", ((-Lm_Good$coefficients[[2]] *Productioncost) + (Lm_Good$coefficients[[1]]))/(-2 * Lm_Good$coefficients[[2]]))
+```
+## optimal cost for shelve location bad ##
+```{r}
+paste("The optimal price for a bad shelf position", ((-Lm_Bad$coefficients[[2]] *Productioncost) + (Lm_Bad$coefficients[[1]]))/(-2 * Lm_Bad$coefficients[[2]]))
+```
+Note: The negative sign is inserted in the denominator to nullify the negation, as the sign of the LM shows Price's negative correlation with the intercept (Sales).
+
+Here the variation in Production Cost from $40 to $85 the Selling Price also varies as below.
+
+```{r}
+Good_Optimal_price_Range <- (predict(Lm_Good, data.frame(Price = c(40:85)))) / (-2*Lm_Good$coefficients[2])
+Bad_Optimal_Price_Range <- (predict(Lm_Bad, data.frame(Price = c(40:85)))) / (-2*Lm_Bad$coefficients[2])
+```
+
+Selling Price for Good and Bad Shelve Locations over Production Costs of $40-$85
+
+```{r}
+Price_Range<- cbind.data.frame(Production_Cost = c(40:85), Selling_Price_Good = Good_Optimal_price_Range, Selling_Price_Bad = Bad_Optimal_Price_Range)
+Price_Range
+```
+
+The variations of Price for both good and bad shelve locations is represented graphically below.
+
+```{r}
+ggplot(Price_Range, aes(Production_Cost, Price_Range)) + geom_line(aes(y = Good_Optimal_price_Range, col = "Good Shelve")) + geom_line(aes(y = Bad_Optimal_Price_Range, col = "Bad Shelve"))
+```
+
